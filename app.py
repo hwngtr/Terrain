@@ -34,6 +34,8 @@ def predict(image, model):
         T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
     
+    # Convert image to RGB
+    image = image.convert("RGB")
     img_tensor = transform(image).unsqueeze(0)
     
     with torch.no_grad():
@@ -41,7 +43,7 @@ def predict(image, model):
         pred = torch.softmax(output, dim=1)
         prob, idx = torch.max(pred, 1)
         return pred.numpy(), prob.item(), idx.item()
-
+    
 # App title
 
 st.title("Terrain Classification")
