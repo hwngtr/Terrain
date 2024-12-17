@@ -45,7 +45,7 @@ def predict(image, model):
 # App title
 
 st.title("Terrain Classification")
-model = load_model(r"D:\Model\Model.pth")
+model = load_model(/workspaces/Terrain/Model.pth)
 classes = ['Desert', 'Forest', 'Mountain', 'Plains']
 
 # File upload and prediction
