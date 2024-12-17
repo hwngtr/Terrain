@@ -3,20 +3,33 @@ import torch
 import timm
 from torchvision import transforms as T
 from PIL import Image
+import numpy as np
 
 def load_model(model_path):
-    # Create model with correct architecture
-    model = timm.create_model('mobilenetv3_small_100', pretrained=False, num_classes=6)
-    state_dict = torch.load(model_path, map_location=torch.device('cpu'))
-    # Debug model loading
-    print(f"Model keys: {state_dict.keys()}")
-    model.load_state_dict(state_dict, strict=False)
-    model.eval()
-    return model
+    try:
+        # Create RexNet model with 4 classes to match checkpoint
+        model = timm.create_model(
+            'rexnet_100',
+            pretrained=False,
+            num_classes=4,  # Match checkpoint classes
+            width_mult=1.5
+        )
+        
+        checkpoint = torch.load(model_path, map_location=torch.device('cpu'))
+        model.load_state_dict(checkpoint, strict=True)
+        model.eval()
+        return model
+    except Exception as e:
+        st.error(f"Error loading model: {str(e)}")
+        st.stop()
+
+
 
 def predict(image, model):
+    # Match training transforms
     transform = T.Compose([
         T.Resize((224, 224)),
+        T.CenterCrop(224),
         T.ToTensor(),
         T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
@@ -30,29 +43,33 @@ def predict(image, model):
         return pred.numpy(), prob.item(), idx.item()
 
 # App title
+
 st.title("Terrain Classification")
+model = load_model(r"D:\Model\Model.pth")
+classes = ['Desert', 'Forest', 'Mountain', 'Plains']
 
-# Load model
-model = load_model(r"C:\Users\speec\Downloads\terrain_best_model.pth")
-
-# Display classes
-classes = ['Desert', 'Forest', 'Grassland', 'Mountain', 'Ocean', 'Snow']
-
-# Add file uploader
+# File upload and prediction
 uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
+    # Display image
     image = Image.open(uploaded_file)
-    st.image(image, caption='Uploaded Image', use_container_width=True)
+    st.image(image, caption='Uploaded Image', use_column_width=True)
     
-    pred, confidence, class_idx = predict(image, model)
+    # Make prediction
+    predictions, prob, class_idx = predict(image, model)
     
-    st.write("Predictions:")
-    sorted_preds = sorted(enumerate(pred[0]), key=lambda x: x[1], reverse=True)
+    # Show results
+    st.write("## Prediction Results")
     
-    # Show only top predictions with meaningful confidence
-    for idx, prob in sorted_preds:
-        if prob > 0.2:  # Increased threshold to 20%
-            st.write(f"{classes[idx]}: {prob*100:.2f}%")
+    # Display all class probabilities
+    for idx, (label, probability) in enumerate(zip(classes, predictions[0])):
+        prob_pct = probability * 100
+        st.write(f"{label}: {prob_pct:.2f}%")
     
-    st.write(f"\nMost Likely: {classes[class_idx]} ({confidence*100:.2f}%)")
+    # Highlight top prediction
+    st.write("## Top Prediction")
+    st.write(f"**{classes[class_idx]}** with {prob*100:.2f}% confidence")
+    
+    # Show predictions with confidence threshold
+    confidence_threshold = 0.15  # 15%
