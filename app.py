@@ -9,7 +9,7 @@ import pickle
 import os
 
 FEEDBACK_DIR = "data/feedback"
-FEEDBACK_FILE = os.path.join(FEEDBACK_DIR, "feedback_data.csv")
+FEEDBACK_FILE = os.path.join(FEEDBACK_DIR, "feedback_data.csv") 
 FEEDBACK_IMAGES = os.path.join(FEEDBACK_DIR, "images")
 
 
