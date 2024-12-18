@@ -4,7 +4,9 @@ import timm
 from torchvision import transforms as T
 from PIL import Image
 import numpy as np
-
+from datetime import datetime
+import pickle
+import os
 
 def load_model(model_path):
     try:
@@ -24,7 +26,19 @@ def load_model(model_path):
         st.error(f"Error loading model: {str(e)}")
         st.stop()
 
+# Initialize feedback data structure if not exists
+if 'feedback_data' not in st.session_state:
+    st.session_state.feedback_data = {
+        'images': [],
+        'labels': [],
+        'timestamps': []
+    }
 
+# Load existing feedback if available
+feedback_file = 'feedback_data.pkl'
+if os.path.exists(feedback_file):
+    with open(feedback_file, 'rb') as f:
+        st.session_state.feedback_data = pickle.load(f)
 
 def predict(image, model):
     # Match training transforms
@@ -74,25 +88,25 @@ if uploaded_file is not None:
     st.write("## Top Prediction")
     st.write(f"**{classes[class_idx]}** with {prob*100:.2f}% confidence")
     
-    # Add this after your prediction results
-    st.write("## Feedback")
-    st.write("Was this prediction correct?")
+# Add after prediction display
+st.write("## Feedback")
+st.write("Was this prediction correct?")
 
-    # Create feedback buttons and input
-    correct_label = st.selectbox("Select the correct terrain type:", classes)
-    submit_feedback = st.button("Submit Feedback")
+# Create feedback buttons and input
+correct_label = st.selectbox("Select the correct terrain type:", classes)
+submit_feedback = st.button("Submit Feedback")
 
-    if submit_feedback:
+if submit_feedback:
     # Store feedback data
-    feedback_data['images'].append(uploaded_file.getvalue())
-    feedback_data['labels'].append(correct_label)
-    feedback_data['timestamps'].append(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    st.session_state.feedback_data['images'].append(uploaded_file.getvalue())
+    st.session_state.feedback_data['labels'].append(correct_label)
+    st.session_state.feedback_data['timestamps'].append(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     
     # Save feedback to a file
     with open('feedback_data.pkl', 'wb') as f:
-        pickle.dump(feedback_data, f)
+        pickle.dump(st.session_state.feedback_data, f)
     
-    st.success("Thank you for your feedback!")
+    st.success("Thank you for your feedback! This will help improve the model.")
     
     
     
