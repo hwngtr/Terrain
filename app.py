@@ -26,7 +26,7 @@ def load_model(model_path):
         st.error(f"Error loading model: {str(e)}")
         st.stop()
 
-# Initialize feedback data structure if not exists
+# Initialize feedback data at start
 if 'feedback_data' not in st.session_state:
     st.session_state.feedback_data = {
         'images': [],
@@ -88,26 +88,22 @@ if uploaded_file is not None:
     st.write("## Top Prediction")
     st.write(f"**{classes[class_idx]}** with {prob*100:.2f}% confidence")
     
-# Add after prediction display
-st.write("## Feedback")
-st.write("Was this prediction correct?")
+    # Feedback section - only shown after prediction
+    st.write("## Feedback")
+    st.write("Was this prediction correct?")
 
-# Create feedback buttons and input
-correct_label = st.selectbox("Select the correct terrain type:", classes)
-submit_feedback = st.button("Submit Feedback")
+    # Create feedback buttons and input
+    correct_label = st.selectbox("Select the correct terrain type:", classes)
+    submit_feedback = st.button("Submit Feedback")
 
-if submit_feedback:
-    # Store feedback data
-    st.session_state.feedback_data['images'].append(uploaded_file.getvalue())
-    st.session_state.feedback_data['labels'].append(correct_label)
-    st.session_state.feedback_data['timestamps'].append(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-    
-    # Save feedback to a file
-    with open('feedback_data.pkl', 'wb') as f:
-        pickle.dump(st.session_state.feedback_data, f)
-    
-    st.success("Thank you for your feedback! This will help improve the model.")
-    
-    
-    
-    
+    if submit_feedback:
+        # Store feedback data
+        st.session_state.feedback_data['images'].append(uploaded_file.getvalue())
+        st.session_state.feedback_data['labels'].append(correct_label)
+        st.session_state.feedback_data['timestamps'].append(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        
+        # Save feedback to a file
+        with open('feedback_data.pkl', 'wb') as f:
+            pickle.dump(st.session_state.feedback_data, f)
+        
+        st.success("Thank you for your feedback! This will help improve the model.")
