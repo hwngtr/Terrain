@@ -8,6 +8,8 @@ from datetime import datetime
 import pickle
 import os
 
+FEEDBACK_FILE = "feedback_data.csv"
+
 def load_model(model_path):
     try:
         # Create RexNet model with 4 classes to match checkpoint
@@ -96,14 +98,27 @@ if uploaded_file is not None:
     correct_label = st.selectbox("Select the correct terrain type:", classes)
     submit_feedback = st.button("Submit Feedback")
 
-    if submit_feedback:
-        # Store feedback data
-        st.session_state.feedback_data['images'].append(uploaded_file.getvalue())
-        st.session_state.feedback_data['labels'].append(correct_label)
-        st.session_state.feedback_data['timestamps'].append(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-        
-        # Save feedback to a file
-        with open('feedback_data.pkl', 'wb') as f:
-            pickle.dump(st.session_state.feedback_data, f)
-        
-        st.success("Thank you for your feedback! This will help improve the model.")
+# Replace the existing feedback submission block
+if submit_feedback:
+    # Prepare feedback data
+    feedback_entry = {
+        'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        'correct_label': correct_label,
+        'model_prediction': classes[class_idx],
+        'confidence': f"{prob*100:.2f}",
+    }
+    
+    # Save image file with timestamp as name
+    image_filename = f"feedback_images/{feedback_entry['timestamp'].replace(' ','_')}.jpg"
+    os.makedirs('feedback_images', exist_ok=True)
+    image.save(image_filename)
+    feedback_entry['image_path'] = image_filename
+    
+    # Save to CSV
+    df = pd.DataFrame([feedback_entry])
+    if os.path.exists(FEEDBACK_FILE):
+        df.to_csv(FEEDBACK_FILE, mode='a', header=False, index=False)
+    else:
+        df.to_csv(FEEDBACK_FILE, mode='w', header=True, index=False)
+    
+    st.success("Thank you for your feedback!")
