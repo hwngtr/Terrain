@@ -5,6 +5,7 @@ from torchvision import transforms as T
 from PIL import Image
 import numpy as np
 
+
 def load_model(model_path):
     try:
         # Create RexNet model with 4 classes to match checkpoint
@@ -73,5 +74,26 @@ if uploaded_file is not None:
     st.write("## Top Prediction")
     st.write(f"**{classes[class_idx]}** with {prob*100:.2f}% confidence")
     
-    # Show predictions with confidence threshold
-    confidence_threshold = 0.15  # 15%
+    # Add this after your prediction results
+    st.write("## Feedback")
+    st.write("Was this prediction correct?")
+
+    # Create feedback buttons and input
+    correct_label = st.selectbox("Select the correct terrain type:", classes)
+    submit_feedback = st.button("Submit Feedback")
+
+    if submit_feedback:
+    # Store feedback data
+    feedback_data['images'].append(uploaded_file.getvalue())
+    feedback_data['labels'].append(correct_label)
+    feedback_data['timestamps'].append(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    
+    # Save feedback to a file
+    with open('feedback_data.pkl', 'wb') as f:
+        pickle.dump(feedback_data, f)
+    
+    st.success("Thank you for your feedback!")
+    
+    
+    
+    
