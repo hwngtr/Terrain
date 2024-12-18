@@ -8,7 +8,10 @@ from datetime import datetime
 import pickle
 import os
 
-FEEDBACK_FILE = "feedback_data.csv"
+FEEDBACK_DIR = "data/feedback"
+FEEDBACK_FILE = os.path.join(FEEDBACK_DIR, "feedback_data.csv")
+FEEDBACK_IMAGES = os.path.join(FEEDBACK_DIR, "images")
+
 
 def load_model(model_path):
     try:
@@ -98,8 +101,12 @@ if uploaded_file is not None:
     correct_label = st.selectbox("Select the correct terrain type:", classes)
     submit_feedback = st.button("Submit Feedback")
 
-# Replace the existing feedback submission block
+
 if submit_feedback:
+    # Create required directories
+    os.makedirs(FEEDBACK_DIR, exist_ok=True)
+    os.makedirs(FEEDBACK_IMAGES, exist_ok=True)
+
     # Prepare feedback data
     feedback_entry = {
         'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -108,17 +115,18 @@ if submit_feedback:
         'confidence': f"{prob*100:.2f}",
     }
     
-    # Save image file with timestamp as name
-    image_filename = f"feedback_images/{feedback_entry['timestamp'].replace(' ','_')}.jpg"
-    os.makedirs('feedback_images', exist_ok=True)
+    # Save image with relative path
+    image_filename = os.path.join(FEEDBACK_IMAGES, f"{feedback_entry['timestamp'].replace(' ','_')}.jpg")
     image.save(image_filename)
     feedback_entry['image_path'] = image_filename
     
-    # Save to CSV
-    df = pd.DataFrame([feedback_entry])
-    if os.path.exists(FEEDBACK_FILE):
-        df.to_csv(FEEDBACK_FILE, mode='a', header=False, index=False)
-    else:
-        df.to_csv(FEEDBACK_FILE, mode='w', header=True, index=False)
-    
-    st.success("Thank you for your feedback!")
+    # Save to CSV with error handling
+    try:
+        df = pd.DataFrame([feedback_entry])
+        if os.path.exists(FEEDBACK_FILE):
+            df.to_csv(FEEDBACK_FILE, mode='a', header=False, index=False)
+        else:
+            df.to_csv(FEEDBACK_FILE, mode='w', header=True, index=False)
+        st.success("Thank you for your feedback!")
+    except Exception as e:
+        st.error(f"Error saving feedback: {str(e)}")
