@@ -1,6 +1,6 @@
 # Terrain Classification
 
-A machine learning application that classifies terrain images into four categories: Desert, Forest, Mountain, and Plains using a RexNet neural network model.
+A machine learning application that classifies satellite terrain images into four categories: Desert, Forest, Mountain, and Plains using a RexNet neural network model.
 
 ## Features
 
